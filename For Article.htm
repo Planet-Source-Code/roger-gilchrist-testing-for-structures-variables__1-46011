@@ -1,0 +1,243 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<html>
+<head>
+	<title>Untitled</title>
+</head>
+<B>Don't Test 'For' Variables outside the 'For' Structure</B>
+<p>
+It is rarely wise to depend on the value of a 'For' variable once you have gone past the 'Next' line. <p>
+The basic rule is that on exiting the 'For' Structure,the variable's value will be the last value of the "For' counter variable PLUS the Step value (1 if you don't specify a Step value).
+But you cannot always be sure what that exit value will be, as something in the loop may change it in unexpected ways or you may not realize what the last value really is as a Step may exit earlier than your 'To' statement indicates. 
+The following assumes you have not deliberately coded to exit a 'For' structure early.
+<P>
+This is the simplest case.
+<P>
+<pre>
+Private Sub Command1_Click()
+Dim X As Long
+Dim count As Long
+For X = 1 To 10 
+count = count + 1
+Next
+Command1.Caption = count & " " & X
+End Sub
+</pre>
+The caption will be "10 11"
+<br> 
+Why?
+<br>
+10 because the 'For' structure will hit 10 times 
+<br>
+11 because  X = 10 + 1 (last_counter_value(=last_'To'_value)) plus (step_size)
+
+<P>
+if you use a negative Step value then
+<pre>
+Private Sub Command1_Click()
+Dim X As Long
+Dim count As Long
+For X = 10 To 1 Step -1
+count = count + 1
+Next
+Command1.Caption = count & " " & X
+End Sub
+</pre>
+The caption will be "10 0"
+<br> 
+Why?
+<br> 
+10 because the 'For' structure will hit 10 times  
+<br>
+0 because X = 1 + -1 (last_counter_fitted(=last_'To'_value)) plus (step_size)
+<P>
+
+If you use a Step value the results are slightly more complex;
+<P>
+<pre>
+Private Sub Command2_Click()
+Dim X As Long
+Dim count As Long
+For X = 1 To 10 Step 4
+count = count + 1
+Next
+Command2.Caption = count & " " & X
+End Sub
+</pre>
+
+The caption will be "3 13"
+<br> 
+Why?
+<br> 
+3 because '1 To 10' contains 3 values (1, 5, 9) with Step 4 spacing 
+<br>
+13 because X = 9 + 4 (last_counter_fitted(=last_value_that_fitted)) plus (step_size)
+
+
+<P>
+Negative case;
+<P>
+<pre>
+Private Sub Command2_Click()
+Dim X As Long
+Dim count As Long
+For X = 10 To 1 Step -4
+count = count + 1
+Next
+Command2.Caption = count & " " & X
+End Sub
+</pre>
+
+The caption will be "3 -2"
+<br> 
+Why?
+<br> 
+3 because '1 To 10' contains 3 values (10, 6, 2) with Step 4 spacing 
+<br>
+-2 because X = 2 + -4 (last_counter_fitted(=last_value_that_fitted)) plus (step_size)
+<BR>
+NOTE
+<BR>
+If the 1st 'To' value exceeds the 2nd and you don't use a negative Step value then you never enter the 'For' structure and the fall through values will be the 1st 'To' value and count = 0, It is entering the 'For' Structure which adds the Step value so it is not added in this case.  
+
+<pre>
+Private Sub Command3_Click()
+Dim X As Long
+Dim count As Long
+For X = 10 To 1
+count = count + 1
+Next
+Command3.Caption = count & " " & X
+End Sub
+</pre>
+
+The caption will be "0 10" 
+<br>
+Why?
+<br>
+0 because the 'For' structure is never entered 
+<br>
+10 because X = first member of 'To' statement and immediately skips the 'To' structure as it is greater than 2nd member. 
+Only entering the 'For' structure adds the step value.
+<p>
+OR if you use a Negative step but a positive directed 'To' statement
+<pre>
+Private Sub Command1_Click()
+Dim X As Long
+Dim count As Long
+For X = 1 To 10 Step -4
+count = count + 1
+Next
+Command1.Caption = count & " " & X
+End Sub
+</pre>
+The caption will be "0 1" 
+<br>
+Why?
+<br>
+0 because the 'For' structure is never entered 
+<br>
+1 because X = first member of 'To' statement and immediately skips the 'To' structure as it is greater than 2nd member. 
+Only entering the 'For' structure adds the step value.
+
+<P>
+Finally, changing the value of a 'For' Variable inside the 'For' structure may cause the value of the variable to exceed the limits of the range set in the 'To' part of the structure. The code then falls out of the 'For' Structure and continues on with whatever value caused the violation PLUS the step value. 
+
+<pre>
+Private Sub Command4_Click()
+Dim X As Long
+Dim Count As Long
+Count = 0
+For X = 1 To 10
+X = 20
+Count = Count + 1
+Next
+Command4.Caption = Count & " " & X
+End Sub
+</pre>
+
+The caption will be "1 21"
+<br>
+Why?
+<br> 
+1 because the value of X will exceeds the 'To' range on the 1st cycle of the structure 
+<br>
+21 because X = 20 + 1 (last_value_set_to_X> plus (step_size).
+<p>
+NOTE there is also the disastrous possibility of resetting X to stay inside the 'To' range and going into a permanent loop. In this case no caption will be generated, and you will have to break to escape.
+<P>
+<b>Why does any of this matter?</b>
+<br>
+This article arose in response to some code which was unexpectedly exiting a 'For' structure.<br> 
+In the example above I simply assigned an excess value and you will easily see what you have done.
+<br>
+If you do the same by assigning a Function value to X  'X = SomeFunction(X)' you would probably also see it quickly.<br> 
+But if you send the X to a Sub routine, you have to be careful that the Sub does not change the value of X.
+(While it seems a little unlikely that you would make this mistake imagine building a quick and dirty 'For' 
+structure to test some more complex behaviour of a control or other piece of code.)
+<br>
+Assume you have the following routine;
+<pre>
+Private Sub DoSomeThingWith (V as Long)
+V = V * 100/SomePublicVariable
+'and then do something else with the value V
+End Sub
+</pre>
+ and call it from inside the 'For' structure.
+<pre>
+ Private Sub Command4_Click()
+Dim X As Long
+Dim Count As Long
+Count = 0
+For X = 1 To 10
+DoSomeThingWith X1
+Count = Count + 1
+NextSomePublicVariable
+Command4.Caption = Count & " " & X
+End Sub</pre>
+This will almost certainly exit unexpectedly unless SomePublicVariable happens to be 100; it could also lead to a perpetual loop if X keeps resetting to stay with in the 'To' range.
+ <p>
+Here are 3 ways to avoid unexpected exits from a 'For' Structure in these circumstances;
+<br>
+1) Inside the 'For' Structure use a second variable to pass the value of X into the Sub 
+<pre>
+Private Sub Command4_Click()
+Dim X As Long
+Dim X1 As Long
+Dim Count As Long
+Count = 0
+For X = 1 To 10
+X1 = X
+DoSomeThingWith X1
+Count = Count + 1
+Next
+Command4.Caption = Count & " " & X
+End Sub</pre> 
+					 
+2) In the called routine use a local variable and apply any changes to it.
+<pre>
+Private Sub DoSomeThingWith (V as Long)
+Dim LocalV as long
+LocalV = V * 100/SomePublicVariable
+'and then do something else with the value LocalV
+End Sub
+</pre>
+3) Use byVal in the parameter. This allows the Sub to use the value of V but will not change it.
+<pre>
+Private Sub DoSomeThingWith (byVal V as Long)
+V = V * 100/SomePublicVariable
+'and then do something else with the value V
+End Sub
+</pre>		  					   
+<p>
+I would recommend the 3rd method, as it is the safest and auto-complete will remind you that the value will not change whenever you type a call to the Sub. 
+<br>Of course if you are just testing and (normally )want the variable to change use method 1. 
+<br>Method 2 is the worst, you may forget to remove it after testing, auto-complete won't tell you that the variable will be unchanged, and you may expect/require it to change.
+<p>
+hope this was useful.  
+<body>
+
+
+
+</body>
+</html>
